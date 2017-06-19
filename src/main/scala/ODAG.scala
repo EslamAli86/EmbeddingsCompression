@@ -7,8 +7,9 @@ class ODAG {
   var numOfDomains = 0
   var domains: ArrayBuffer[HashMap[Int, ArrayBuffer[Int]]] = _
   // total = actual + spurious
-  protected var odagCapacity = 0L;
-  protected var numTotalEmeddings = 0L
+  protected var storage = 0L
+  protected var capacity = 0L
+  protected var numTotalEmbeddings = 0L
   // num of actual embeddings is stored in the odag file
   protected var numActualEmbeddings = 0L
   protected var numSpuriousEmbeddings = 0L
@@ -17,17 +18,20 @@ class ODAG {
 
   protected def calcNumTotalEmbeddings(): Long = {
     var total = 0L
+
+    // if it is empty then it is empty :D
+    if(domains(0).size == 0)
+      0L
+
     enumeratios = new ArrayBuffer[HashMap[Int, Long]]()
     domains.foreach(_ => enumeratios += new HashMap[Int, Long]())
 
     // init the last domain with 1
     var i = domains.length - 1
     var j = 0
-    //println("lastEnum.size = " + enumeratios(i).size)
     domains(i).foreach(entry => {
       enumeratios(i)(entry._1) = 1L
     })
-    //println("lastEnum.size = " + enumeratios(i).size)
 
     i = domains.length - 2
 
@@ -46,37 +50,42 @@ class ODAG {
       })
       i -= 1
     }
-
     enumeratios(0).foreach(entry => total += entry._2)
     total
   }
+
   def getNumTotalEmbeddings: Long = {
-    if(numTotalEmeddings == 0) {
-      numTotalEmeddings = calcNumTotalEmbeddings
+    if(numTotalEmbeddings == 0) {
+      numTotalEmbeddings = calcNumTotalEmbeddings
     }
-    numTotalEmeddings
+    numTotalEmbeddings
   }
+
   def getNumSpuriousEmbeddings: Long = {
     getNumTotalEmbeddings - numActualEmbeddings
+    //capacity - numActualEmbeddings
   }
 
-  def getNumActualEmbeddings: Long = {
-    numActualEmbeddings
+  def getNumActualEmbeddings: Long = { numActualEmbeddings }
+
+  def setNumActualEmbeddings(num: Long) = { numActualEmbeddings = num }
+
+  def getStorage(): Long = { storage }
+
+  def setStorage(storage: Long) = { this.storage = storage }
+
+  def increaseStorage(amount: Int) = { this.storage += amount}
+
+  def getCapacity: Long = {
+    if(capacity == 0)
+      capacity = getNumTotalEmbeddings
+    capacity
   }
 
-  def setNumActualEmbeddings(num: Long) = {
-    numActualEmbeddings = num
-  }
-
-  def getOdagCapacity: Long = {
-    odagCapacity
-  }
-
-  def setOdagCapacity(num: Long) = {
-    odagCapacity = num
-  }
+  def setCapacity(num: Long) = { capacity = num }
 
   // calculates the cost of adding an embedding to the odag
+  // i.e. how many variables needed to add the new embedding
   def getEmbeddingCost(e:Embedding) : Int = {
     if(e.content.length != domains.size) {
       e.content.length
@@ -125,6 +134,7 @@ class ODAG {
       }
       i += 1
     }
+    numActualEmbeddings += 1
   }
 }
 
